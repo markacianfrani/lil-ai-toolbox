@@ -1,0 +1,46 @@
+import * as fs from 'node:fs/promises'
+import * as glob from 'glob'
+
+// Basic parameters for our simplified search tool
+export interface SearchParams {
+  pattern: string
+  path?: string
+  include?: string
+}
+
+export interface Match {
+  file_path: string
+  line_number: number
+  line: string
+}
+
+// Minimal tool definition
+export async function searchFileContent(params: SearchParams): Promise<Match[]> {
+  // Basic validation
+  if (!params.pattern) {
+    throw new Error('The "pattern" parameter is required.')
+  }
+
+  const matches: Match[] = []
+  const files = await glob.glob(params.include || '**/*', params.path ? { cwd: params.path } : {})
+
+  for (const file of files) {
+    try {
+      const content = await fs.readFile(file, { encoding: 'utf-8' })
+      const lines = content.split('\n')
+      for (let i = 0; i < lines.length; i++) {
+        if (new RegExp(params.pattern).test(lines[i])) {
+          matches.push({
+            file_path: file,
+            line_number: i + 1,
+            line: lines[i],
+          })
+        }
+      }
+    } catch (_e: unknown) {
+      // Ignore errors for individual files (e.g., directories)
+    }
+  }
+
+  return matches
+}
