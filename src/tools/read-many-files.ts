@@ -19,6 +19,11 @@ export async function readManyFiles(
 
   for (const filePath of params.filePaths) {
     const resolvedPath = path.resolve(filePath)
+    // Guardrail: restrict access to current working directory
+    const cwd = process.cwd()
+    if (!resolvedPath.startsWith(cwd)) {
+      throw new Error('Access denied: path outside working directory')
+    }
     try {
       const content = await fs.readFile(resolvedPath, { encoding: 'utf-8' })
       results.push({ filePath: filePath, content })

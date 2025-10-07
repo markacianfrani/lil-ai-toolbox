@@ -22,7 +22,17 @@ export async function searchFileContent(params: SearchParams): Promise<Match[]> 
   }
 
   const matches: Match[] = []
-  const files = await glob.glob(params.include || '**/*', params.path ? { cwd: params.path } : {})
+  let cwdOption = {}
+  if (params.path) {
+    const resolvedPath = require('path').resolve(params.path)
+    // Guardrail: restrict access to current working directory
+    const cwd = process.cwd()
+    if (!resolvedPath.startsWith(cwd)) {
+      throw new Error('Access denied: path outside working directory')
+    }
+    cwdOption = { cwd: resolvedPath }
+  }
+  const files = await glob.glob(params.include || '**/*', cwdOption)
 
   for (const file of files) {
     try {

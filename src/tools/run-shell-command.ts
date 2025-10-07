@@ -15,6 +15,11 @@ export async function runShellCommand(
     throw new Error('The "command" parameter is required.')
   }
 
+  // Guardrail: reject commands with absolute paths
+  if (/[\/~]/.test(params.command) || /[A-Z]:/.test(params.command)) {
+    throw new Error('Access denied: command contains absolute paths')
+  }
+
   return new Promise((resolve, reject) => {
     exec(params.command, { timeout: params.timeout || 120000 }, (error, stdout, stderr) => {
       if (error) {

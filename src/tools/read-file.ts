@@ -17,6 +17,12 @@ export async function readFile(params: ReadFileParams): Promise<string> {
 
   const resolvedPath = path.resolve(params.filePath)
 
+  // Guardrail: restrict access to current working directory
+  const cwd = process.cwd()
+  if (!resolvedPath.startsWith(cwd)) {
+    throw new Error('Access denied: path outside working directory')
+  }
+
   try {
     // Read the file content
     const content = await fs.readFile(resolvedPath, { encoding: 'utf-8' })

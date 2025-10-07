@@ -17,6 +17,12 @@ export async function listDirectory(params: ListDirectoryParams): Promise<string
 
   const resolvedPath = path.resolve(params.path)
 
+  // Guardrail: restrict access to current working directory
+  const cwd = process.cwd()
+  if (!resolvedPath.startsWith(cwd)) {
+    throw new Error('Access denied: path outside working directory')
+  }
+
   try {
     // Read the directory contents
     let files = await fs.readdir(resolvedPath)

@@ -19,6 +19,12 @@ export async function writeFile(params: WriteFileParams): Promise<void> {
 
   const resolvedPath = path.resolve(params.filePath)
 
+  // Guardrail: restrict access to current working directory
+  const cwd = process.cwd()
+  if (!resolvedPath.startsWith(cwd)) {
+    throw new Error('Access denied: path outside working directory')
+  }
+
   try {
     // Write the content to the file
     await fs.writeFile(resolvedPath, params.content, { encoding: 'utf-8' })
