@@ -15,9 +15,22 @@ export async function runShellCommand(
     throw new Error('The "command" parameter is required.')
   }
 
-  // Guardrail: reject commands with absolute paths
-  if (/[\/~]/.test(params.command) || /[A-Z]:/.test(params.command)) {
-    throw new Error('Access denied: command contains absolute paths')
+  // Guardrail: reject dangerous commands
+  const dangerousPatterns = [
+    /\brm\s+-rf\b/,
+    /\bsudo\b/,
+    /\bchmod\s+777\b/,
+    /\bchown\b/,
+    /\bmkfs\b/,
+    /\bdd\b/,
+    /\bshutdown\b/,
+    /\breboot\b/,
+    /\binit\b/,
+    /\bkillall\b/,
+    /\bpkill\b/,
+  ]
+  if (dangerousPatterns.some((pattern) => pattern.test(params.command))) {
+    throw new Error('Access denied: command contains dangerous operations')
   }
 
   return new Promise((resolve, reject) => {

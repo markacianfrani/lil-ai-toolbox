@@ -24,7 +24,7 @@ export async function searchFileContent(params: SearchParams): Promise<Match[]> 
   const matches: Match[] = []
   let cwdOption = {}
   if (params.path) {
-    const resolvedPath = require('path').resolve(params.path)
+    const resolvedPath = require('node:path').resolve(params.path)
     // Guardrail: restrict access to current working directory
     const cwd = process.cwd()
     if (!resolvedPath.startsWith(cwd)) {
