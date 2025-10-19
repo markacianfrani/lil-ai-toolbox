@@ -215,6 +215,7 @@ export interface GrepParams {
   pattern: string
   path?: string
   include?: string
+  guardrailDir?: string
 }
 
 // Match result interface
@@ -246,7 +247,8 @@ export async function grepSearch(params: GrepParams): Promise<GrepResult> {
 
   // Resolve and validate path
   const resolvedPath = path.resolve(searchPath)
-  assertWithinWorkspace(resolvedPath)
+  const guardrailDir = params.guardrailDir || process.cwd()
+  assertWithinWorkspace(resolvedPath, guardrailDir)
 
   try {
     // Use ripgrep for search

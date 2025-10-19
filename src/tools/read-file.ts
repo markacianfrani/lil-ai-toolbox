@@ -7,6 +7,7 @@ export interface ReadFileParams {
   filePath: string
   offset?: number
   limit?: number
+  guardrailDir?: string
 }
 
 // Minimal tool definition
@@ -18,7 +19,8 @@ export async function readFile(params: ReadFileParams): Promise<string> {
 
   const resolvedPath = path.resolve(params.filePath)
 
-  assertWithinWorkspace(resolvedPath)
+  const guardrailDir = params.guardrailDir || process.cwd()
+  assertWithinWorkspace(resolvedPath, guardrailDir)
 
   try {
     // Read the file content

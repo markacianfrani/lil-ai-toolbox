@@ -7,6 +7,7 @@ import { assertWithinWorkspace } from './path-utils'
 export interface ListDirectoryParams {
   path: string
   ignore?: string[]
+  guardrailDir?: string
 }
 
 // Minimal tool definition
@@ -18,7 +19,8 @@ export async function listDirectory(params: ListDirectoryParams): Promise<string
 
   const resolvedPath = path.resolve(params.path)
 
-  assertWithinWorkspace(resolvedPath)
+  const guardrailDir = params.guardrailDir || process.cwd()
+  assertWithinWorkspace(resolvedPath, guardrailDir)
 
   try {
     // Read the directory contents

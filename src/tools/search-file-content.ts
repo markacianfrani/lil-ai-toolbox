@@ -8,6 +8,7 @@ export interface SearchParams {
   pattern: string
   path?: string
   include?: string
+  guardrailDir?: string
 }
 
 export interface Match {
@@ -27,7 +28,8 @@ export async function searchFileContent(params: SearchParams): Promise<Match[]> 
   let cwdOption = {}
   if (params.path) {
     const resolvedPath = path.resolve(params.path)
-    assertWithinWorkspace(resolvedPath)
+    const guardrailDir = params.guardrailDir || process.cwd()
+    assertWithinWorkspace(resolvedPath, guardrailDir)
     cwdOption = { cwd: resolvedPath }
   }
   const files = await glob.glob(params.include || '**/*', cwdOption)

@@ -6,6 +6,7 @@ import { assertWithinWorkspace } from './path-utils'
 export interface WriteFileParams {
   filePath: string
   content: string
+  guardrailDir?: string
 }
 
 // Minimal tool definition
@@ -20,7 +21,8 @@ export async function writeFile(params: WriteFileParams): Promise<void> {
 
   const resolvedPath = path.resolve(params.filePath)
 
-  assertWithinWorkspace(resolvedPath)
+  const guardrailDir = params.guardrailDir || process.cwd()
+  assertWithinWorkspace(resolvedPath, guardrailDir)
 
   try {
     // Write the content to the file

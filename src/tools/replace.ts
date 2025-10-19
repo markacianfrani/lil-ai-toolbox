@@ -8,6 +8,7 @@ export interface ReplaceParams {
   oldString: string
   newString: string
   replaceAll?: boolean
+  guardrailDir?: string
 }
 
 // Minimal tool definition
@@ -19,7 +20,8 @@ export async function replace(params: ReplaceParams): Promise<void> {
 
   const resolvedPath = path.resolve(params.filePath)
 
-  assertWithinWorkspace(resolvedPath)
+  const guardrailDir = params.guardrailDir || process.cwd()
+  assertWithinWorkspace(resolvedPath, guardrailDir)
 
   try {
     // Read the file content

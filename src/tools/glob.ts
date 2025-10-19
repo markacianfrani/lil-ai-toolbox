@@ -6,6 +6,7 @@ import { assertWithinWorkspace } from './path-utils'
 export interface GlobParams {
   pattern: string
   path?: string
+  guardrailDir?: string
 }
 
 // Minimal tool definition
@@ -18,7 +19,8 @@ export async function globSearch(params: GlobParams): Promise<string[]> {
   let cwdOption = {}
   if (params.path) {
     const resolvedPath = path.resolve(params.path)
-    assertWithinWorkspace(resolvedPath)
+    const guardrailDir = params.guardrailDir || process.cwd()
+    assertWithinWorkspace(resolvedPath, guardrailDir)
     cwdOption = { cwd: resolvedPath }
   }
 

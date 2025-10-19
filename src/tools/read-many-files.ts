@@ -5,6 +5,7 @@ import { assertWithinWorkspace } from './path-utils'
 // Basic parameters for our simplified read_many_files tool
 export interface ReadManyFilesParams {
   filePaths: string[]
+  guardrailDir?: string
 }
 
 // Minimal tool definition
@@ -17,10 +18,11 @@ export async function readManyFiles(
   }
 
   const results: { filePath: string; content: string }[] = []
+  const guardrailDir = params.guardrailDir || process.cwd()
 
   for (const filePath of params.filePaths) {
     const resolvedPath = path.resolve(filePath)
-    assertWithinWorkspace(resolvedPath)
+    assertWithinWorkspace(resolvedPath, guardrailDir)
     try {
       const content = await fs.readFile(resolvedPath, { encoding: 'utf-8' })
       results.push({ filePath: filePath, content })
