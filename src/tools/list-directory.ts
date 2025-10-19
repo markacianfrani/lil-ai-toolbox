@@ -1,6 +1,7 @@
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import { minimatch } from 'minimatch'
+import { assertWithinWorkspace } from './path-utils'
 
 // Basic parameters for our simplified list tool
 export interface ListDirectoryParams {
@@ -17,11 +18,7 @@ export async function listDirectory(params: ListDirectoryParams): Promise<string
 
   const resolvedPath = path.resolve(params.path)
 
-  // Guardrail: restrict access to current working directory
-  const cwd = process.cwd()
-  if (!resolvedPath.startsWith(cwd)) {
-    throw new Error('Access denied: path outside working directory')
-  }
+  assertWithinWorkspace(resolvedPath)
 
   try {
     // Read the directory contents

@@ -1,6 +1,7 @@
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import { $ } from 'bun'
+import { assertWithinWorkspace } from './path-utils'
 
 // Ripgrep utility for the grep tool
 export namespace Ripgrep {
@@ -15,13 +16,84 @@ export namespace Ripgrep {
     'x64-win32': { platform: 'x86_64-pc-windows-msvc', extension: 'zip' },
   } as const
 
+  function getPlatformConfig() {
+    const platformKey = `${process.arch}-${process.platform}` as keyof typeof PLATFORM
+    const config = PLATFORM[platformKey]
+    if (!config) {
+      throw new Error(`Unsupported platform: ${platformKey}`)
+    }
+    return config
+  }
+
+  async function downloadFile(url: string, destPath: string) {
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error(`Failed to download: ${response.status}`)
+    }
+    const buffer = await response.arrayBuffer()
+    await Bun.write(destPath, buffer)
+  }
+
+  async function extractArchive(
+    archivePath: string,
+    binDir: string,
+    config: (typeof PLATFORM)[keyof typeof PLATFORM]
+  ) {
+    if (config.extension === 'tar.gz') {
+      await $`tar -xzf ${archivePath} -C ${binDir} --strip-components=1 --wildcards "*/rg"`.quiet()
+    } else if (config.extension === 'zip') {
+      try {
+        await $`unzip -j ${archivePath} "*/rg.exe" -d ${binDir}`.quiet()
+      } catch {
+        throw new Error(
+          'unzip command not available. Please install unzip or manually extract ripgrep.'
+        )
+      }
+    }
+  }
+
+  async function downloadRipgrep(): Promise<string> {
+    const config = getPlatformConfig()
+    const version = '14.1.1'
+    const filename = `ripgrep-${version}-${config.platform}.${config.extension}`
+    const url = `https://github.com/BurntSushi/ripgrep/releases/download/${version}/${filename}`
+
+    const binDir = path.join(process.cwd(), 'bin')
+    await fs.mkdir(binDir, { recursive: true })
+
+    const archivePath = path.join(binDir, filename)
+    const filepath = path.join(binDir, process.platform === 'win32' ? 'rg.exe' : 'rg')
+
+    // Check if we already have the binary
+    try {
+      await fs.access(filepath)
+      return filepath
+    } catch {}
+
+    console.log(`Downloading ripgrep ${version}...`)
+    await downloadFile(url, archivePath)
+    await extractArchive(archivePath, binDir, config)
+
+    // Set executable permissions on Unix-like systems
+    if (process.platform !== 'win32') {
+      await fs.chmod(filepath, 0o755)
+    }
+
+    // Clean up archive
+    await fs.unlink(archivePath)
+
+    return filepath
+  }
+
   // Lazy initialization of ripgrep
   const state = (() => {
     let filepath: string | null = null
     let initialized = false
 
     return async () => {
-      if (initialized && filepath) return { filepath }
+      if (initialized && filepath) {
+        return { filepath }
+      }
 
       // Check if ripgrep is already available
       try {
@@ -33,65 +105,7 @@ export namespace Ripgrep {
         }
       } catch {}
 
-      // Determine platform and download ripgrep
-      const platformKey = `${process.arch}-${process.platform}` as keyof typeof PLATFORM
-      const config = PLATFORM[platformKey]
-
-      if (!config) {
-        throw new Error(`Unsupported platform: ${platformKey}`)
-      }
-
-      const version = '14.1.1'
-      const filename = `ripgrep-${version}-${config.platform}.${config.extension}`
-      const url = `https://github.com/BurntSushi/ripgrep/releases/download/${version}/${filename}`
-
-      // Create bin directory if it doesn't exist
-      const binDir = path.join(process.cwd(), 'bin')
-      await fs.mkdir(binDir, { recursive: true })
-
-      const archivePath = path.join(binDir, filename)
-      filepath = path.join(binDir, process.platform === 'win32' ? 'rg.exe' : 'rg')
-
-      // Check if we already have the binary
-      try {
-        await fs.access(filepath)
-        initialized = true
-        return { filepath }
-      } catch {}
-
-      console.log(`Downloading ripgrep ${version}...`)
-
-      // Download the archive
-      const response = await fetch(url)
-      if (!response.ok) {
-        throw new Error(`Failed to download ripgrep: ${response.status}`)
-      }
-
-      const buffer = await response.arrayBuffer()
-      await Bun.write(archivePath, buffer)
-
-      // Extract the archive
-      if (config.extension === 'tar.gz') {
-        await $`tar -xzf ${archivePath} -C ${binDir} --strip-components=1 --wildcards "*/rg"`.quiet()
-      } else if (config.extension === 'zip') {
-        // For Windows, we'll use unzip if available, otherwise skip for now
-        try {
-          await $`unzip -j ${archivePath} "*/rg.exe" -d ${binDir}`.quiet()
-        } catch {
-          throw new Error(
-            'unzip command not available. Please install unzip or manually extract ripgrep.'
-          )
-        }
-      }
-
-      // Set executable permissions on Unix-like systems
-      if (process.platform !== 'win32') {
-        await fs.chmod(filepath, 0o755)
-      }
-
-      // Clean up archive
-      await fs.unlink(archivePath)
-
+      filepath = await downloadRipgrep()
       initialized = true
       return { filepath }
     }
@@ -157,14 +171,28 @@ export namespace Ripgrep {
 
     const lines = stdout.trim().split('\n').filter(Boolean)
 
+    interface RipgrepMatch {
+      type: 'match'
+      data: {
+        path: { text: string }
+        line_number: number
+        lines: { text: string }
+        submatches: Array<{
+          match: { text: string }
+          start: number
+          end: number
+        }>
+      }
+    }
+
     return lines
-      .map((line) => JSON.parse(line))
-      .filter((parsed: any) => parsed.type === 'match')
-      .map((parsed: any) => ({
+      .map((line) => JSON.parse(line) as RipgrepMatch)
+      .filter((parsed) => parsed.type === 'match')
+      .map((parsed) => ({
         path: parsed.data.path.text,
         lineNumber: parsed.data.line_number,
         line: parsed.data.lines.text.trim(),
-        matches: parsed.data.submatches.map((sub: any) => ({
+        matches: parsed.data.submatches.map((sub) => ({
           text: sub.match.text,
           start: sub.start,
           end: sub.end,
@@ -218,10 +246,7 @@ export async function grepSearch(params: GrepParams): Promise<GrepResult> {
 
   // Resolve and validate path
   const resolvedPath = path.resolve(searchPath)
-  const cwd = process.cwd()
-  if (!resolvedPath.startsWith(cwd)) {
-    throw new Error('Access denied: path outside working directory')
-  }
+  assertWithinWorkspace(resolvedPath)
 
   try {
     // Use ripgrep for search

@@ -1,6 +1,7 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 import { type GlobParams, globSearch } from './tools/glob'
+import { type GrepParams, grepSearch } from './tools/grep'
 import { type ListDirectoryParams, listDirectory as listDirectoryFn } from './tools/list-directory'
 import { type ReadFileParams, readFile as readFileFn } from './tools/read-file'
 import { type ReadManyFilesParams, readManyFiles as readManyFilesFn } from './tools/read-many-files'
@@ -13,7 +14,6 @@ import {
   type SearchParams,
   searchFileContent as searchFileContentFn,
 } from './tools/search-file-content'
-import { type GrepParams, grepSearch } from './tools/grep'
 import { type WebFetchToolParams, webFetch as webFetchFn } from './tools/web-fetch'
 import { type WriteFileParams, writeFile as writeFileFn } from './tools/write-file'
 

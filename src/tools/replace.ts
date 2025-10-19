@@ -1,6 +1,7 @@
 // Basic parameters for our simplified replace tool
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
+import { assertWithinWorkspace } from './path-utils'
 
 export interface ReplaceParams {
   filePath: string
@@ -18,11 +19,7 @@ export async function replace(params: ReplaceParams): Promise<void> {
 
   const resolvedPath = path.resolve(params.filePath)
 
-  // Guardrail: restrict access to current working directory
-  const cwd = process.cwd()
-  if (!resolvedPath.startsWith(cwd)) {
-    throw new Error('Access denied: path outside working directory')
-  }
+  assertWithinWorkspace(resolvedPath)
 
   try {
     // Read the file content

@@ -1,5 +1,7 @@
 import * as fs from 'node:fs/promises'
+import * as path from 'node:path'
 import * as glob from 'glob'
+import { assertWithinWorkspace } from './path-utils'
 
 // Basic parameters for our simplified search tool
 export interface SearchParams {
@@ -24,12 +26,8 @@ export async function searchFileContent(params: SearchParams): Promise<Match[]> 
   const matches: Match[] = []
   let cwdOption = {}
   if (params.path) {
-    const resolvedPath = require('node:path').resolve(params.path)
-    // Guardrail: restrict access to current working directory
-    const cwd = process.cwd()
-    if (!resolvedPath.startsWith(cwd)) {
-      throw new Error('Access denied: path outside working directory')
-    }
+    const resolvedPath = path.resolve(params.path)
+    assertWithinWorkspace(resolvedPath)
     cwdOption = { cwd: resolvedPath }
   }
   const files = await glob.glob(params.include || '**/*', cwdOption)

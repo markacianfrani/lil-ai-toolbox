@@ -1,5 +1,6 @@
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
+import { assertWithinWorkspace } from './path-utils'
 
 // Basic parameters for our simplified write tool
 export interface WriteFileParams {
@@ -19,11 +20,7 @@ export async function writeFile(params: WriteFileParams): Promise<void> {
 
   const resolvedPath = path.resolve(params.filePath)
 
-  // Guardrail: restrict access to current working directory
-  const cwd = process.cwd()
-  if (!resolvedPath.startsWith(cwd)) {
-    throw new Error('Access denied: path outside working directory')
-  }
+  assertWithinWorkspace(resolvedPath)
 
   try {
     // Write the content to the file

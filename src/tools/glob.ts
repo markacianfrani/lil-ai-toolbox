@@ -1,4 +1,6 @@
+import * as path from 'node:path'
 import * as glob from 'glob'
+import { assertWithinWorkspace } from './path-utils'
 
 // Basic parameters for our simplified glob tool
 export interface GlobParams {
@@ -15,12 +17,8 @@ export async function globSearch(params: GlobParams): Promise<string[]> {
 
   let cwdOption = {}
   if (params.path) {
-    const resolvedPath = require('node:path').resolve(params.path)
-    // Guardrail: restrict access to current working directory
-    const cwd = process.cwd()
-    if (!resolvedPath.startsWith(cwd)) {
-      throw new Error('Access denied: path outside working directory')
-    }
+    const resolvedPath = path.resolve(params.path)
+    assertWithinWorkspace(resolvedPath)
     cwdOption = { cwd: resolvedPath }
   }
 
