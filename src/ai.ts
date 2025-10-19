@@ -13,6 +13,7 @@ import {
   type SearchParams,
   searchFileContent as searchFileContentFn,
 } from './tools/search-file-content'
+import { type GrepParams, grepSearch } from './tools/grep'
 import { type WebFetchToolParams, webFetch as webFetchFn } from './tools/web-fetch'
 import { type WriteFileParams, writeFile as writeFileFn } from './tools/write-file'
 
@@ -118,6 +119,25 @@ export const searchFileContentTool = tool({
   }),
   execute: async (params: SearchParams) => {
     return await searchFileContentFn(params)
+  },
+})
+
+export const grepTool = tool({
+  description:
+    'Fast content search tool that works with any codebase size. Searches file contents using regular expressions. Supports full regex syntax. Filter files by pattern with the include parameter. Returns formatted search results with file paths, line numbers, and content sorted by modification time.',
+  inputSchema: z.object({
+    pattern: z.string().describe('The regex pattern to search for in file contents'),
+    path: z
+      .string()
+      .optional()
+      .describe('The directory to search in. Defaults to the current working directory.'),
+    include: z
+      .string()
+      .optional()
+      .describe('File pattern to include in the search (e.g. "*.js", "*.{ts,tsx}")'),
+  }),
+  execute: async (params: GrepParams) => {
+    return await grepSearch(params)
   },
 })
 
