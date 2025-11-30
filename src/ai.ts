@@ -1,6 +1,7 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 import { type GlobParams, globSearch } from './tools/glob'
+import { type GoogleSearchOptions, googleSearch } from './tools/google-search'
 import { type GrepParams, grepSearch } from './tools/grep'
 import { type ListDirectoryParams, listDirectory as listDirectoryFn } from './tools/list-directory'
 import { type ReadFileParams, readFile as readFileFn } from './tools/read-file'
@@ -154,6 +155,18 @@ export const webFetchTool = tool({
   }),
   execute: async (params: WebFetchToolParams) => {
     return await webFetchFn(params)
+  },
+})
+
+export const googleSearchTool = tool({
+  description:
+    'Searches Google and returns search results. Attaches to a running Chrome instance with remote debugging to avoid bot detection.',
+  inputSchema: z.object({
+    query: z.string().describe('The search query'),
+    numResults: z.number().optional().describe('Number of results to return (default: 5)'),
+  }),
+  execute: async (params: GoogleSearchOptions) => {
+    return await googleSearch(params)
   },
 })
 

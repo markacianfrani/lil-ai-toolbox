@@ -3,6 +3,7 @@
 // AI SDK tool objects
 export {
   globTool,
+  googleSearchTool,
   grepTool,
   listDirectoryTool,
   readFileTool,
@@ -14,6 +15,7 @@ export {
   writeFileTool,
 } from './ai'
 export { globSearch as glob } from './tools/glob'
+export { googleSearch } from './tools/google-search'
 export { grepSearch as grep } from './tools/grep'
 export { listDirectory } from './tools/list-directory'
 export { readFile } from './tools/read-file'

@@ -31,6 +31,8 @@ The `prepublishOnly` script will automatically run build, typecheck, and lint be
 | Tool | AI SDK Tool | Description |
 | --- | --- | --- |
 | `glob` | `globTool` | Finds files matching a specified pattern. |
+| `google-search` | `googleSearchTool` | Searches Google and returns results. |
+| `grep` | `grepTool` | Fast content search using regex patterns. |
 | `list-directory` | `listDirectoryTool` | Lists files and directories in a given path. |
 | `read-file` | `readFileTool` | Reads the content of a file. |
 | `read-many-files` | `readManyFilesTool` | Reads the content of multiple files. |
@@ -51,13 +53,22 @@ Import the AI SDK-compatible tools and use them with `generateText` or `streamTe
 ```typescript
 import { generateText } from 'ai'
 import { openai } from '@ai-sdk/openai'
-import { globTool, readFileTool } from '@cianfrani/lil-ai-toolbox/ai'
+import { globTool, googleSearchTool, readFileTool } from '@cianfrani/lil-ai-toolbox/ai'
 
 const { text } = await generateText({
   model: openai('gpt-4'),
-  prompt: 'Find all TypeScript files in the src directory and show me the first one',
-  tools: [globTool, readFileTool],
+  prompt: 'Find all TypeScript files in the src directory and search Google for TypeScript tutorials',
+  tools: [globTool, googleSearchTool, readFileTool],
 })
+```
+
+### Google Search Usage
+
+```typescript
+import { googleSearch } from '@cianfrani/lil-ai-toolbox'
+
+const results = await googleSearch({ query: 'TypeScript tutorial', numResults: 3 })
+console.log(results)
 ```
 
 ### Using Raw Tools
@@ -65,8 +76,21 @@ const { text } = await generateText({
 You can also use the raw tool functions directly in your applications:
 
 ```typescript
-import { glob } from '@cianfrani/lil-ai-toolbox'
+import { glob, googleSearch } from '@cianfrani/lil-ai-toolbox'
 
 const files = await glob({ pattern: 'src/**/*.ts' })
 console.log(files)
+
+const results = await googleSearch({ query: 'TypeScript tutorial', numResults: 3 })
+console.log(results)
 ```
+
+### Google Search Setup
+
+The Google search tools require Chrome running with remote debugging enabled to avoid bot detection:
+
+```bash
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir=~/.cache/scraping
+```
+
+Keep this window open while using the search functionality.
