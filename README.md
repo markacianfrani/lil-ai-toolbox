@@ -9,6 +9,7 @@ npm install @cianfrani/lil-ai-toolbox
 ```
 
 For AI SDK features, also install:
+
 ```bash
 npm install ai zod
 ```
@@ -28,36 +29,36 @@ The `prepublishOnly` script will automatically run build, typecheck, and lint be
 
 ## Tools
 
-| Tool | AI SDK Tool | Description |
-| --- | --- | --- |
-| `glob` | `globTool` | Finds files matching a specified pattern. |
-| `list-directory` | `listDirectoryTool` | Lists files and directories in a given path. |
-| `read-file` | `readFileTool` | Reads the content of a file. |
-| `read-many-files` | `readManyFilesTool` | Reads the content of multiple files. |
-| `replace` | `replaceTool` | Replaces text in a file. |
-| `run-shell-command` | `runShellCommandTool` | Executes a shell command. |
+| Tool                  | AI SDK Tool             | Description                                     |
+| --------------------- | ----------------------- | ----------------------------------------------- |
+| `glob`                | `globTool`              | Finds files matching a specified pattern.       |
+| `list-directory`      | `listDirectoryTool`     | Lists files and directories in a given path.    |
+| `read-file`           | `readFileTool`          | Reads the content of a file.                    |
+| `read-many-files`     | `readManyFilesTool`     | Reads the content of multiple files.            |
+| `replace`             | `replaceTool`           | Replaces text in a file.                        |
+| `run-shell-command`   | `runShellCommandTool`   | Executes a shell command.                       |
 | `search-file-content` | `searchFileContentTool` | Searches for a pattern in the content of files. |
-| `web-fetch` | `webFetchTool` | Fetches content from a URL. |
-| `write-file` | `writeFileTool` | Writes content to a file. |
+| `web-fetch`           | `webFetchTool`          | Fetches content from a URL.                     |
+| `write-file`          | `writeFileTool`         | Writes content to a file.                       |
 
 ## AI SDK Usage
 
-*Requires `ai` and `zod` packages to be installed.*
+_Requires `ai` and `zod` packages to be installed._
 
 ### Using Tool Wrappers
 
 Import the AI SDK-compatible tools and use them with `generateText` or `streamText`:
 
 ```typescript
-import { generateText } from 'ai'
-import { openai } from '@ai-sdk/openai'
-import { globTool, readFileTool } from '@cianfrani/lil-ai-toolbox/ai'
+import { generateText } from "ai";
+import { openai } from "@ai-sdk/openai";
+import { globTool, readFileTool } from "@cianfrani/lil-ai-toolbox/ai";
 
 const { text } = await generateText({
-  model: openai('gpt-4'),
-  prompt: 'Find all TypeScript files in the src directory and show me the first one',
+  model: openai("gpt-4"),
+  prompt: "Find all TypeScript files in the src directory and show me the first one",
   tools: [globTool, readFileTool],
-})
+});
 ```
 
 ### Using Raw Tools
@@ -65,8 +66,8 @@ const { text } = await generateText({
 You can also use the raw tool functions directly in your applications:
 
 ```typescript
-import { glob } from '@cianfrani/lil-ai-toolbox'
+import { glob } from "@cianfrani/lil-ai-toolbox";
 
-const files = await glob({ pattern: 'src/**/*.ts' })
-console.log(files)
+const files = await glob({ pattern: "src/**/*.ts" });
+console.log(files);
 ```
